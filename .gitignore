@@ -1,0 +1,22 @@
+
+.venv/
+venv/
+
+.env
+
+__pycache__/
+*.pyc
+
+.DS_Store
+
+Thumbs.db
+
+.serverless/
+.webpack/ # Si usas webpack con serverless
+
+logs/
+*.log
+
+.pytest_cache/
+.coverage
+htmlcov/

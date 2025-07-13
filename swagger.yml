@@ -1,0 +1,133 @@
+openapi: 3.0.0
+info:
+  title: User API Service
+  version: 1.0.0
+  description: Microservicio de API de usuarios para la plataforma de compra de libros.
+
+servers:
+  - url: https://xxxxxxxxx.execute-api.us-east-1.amazonaws.com/dev
+    description: Development server
+  - url: https://xxxxxxxxx.execute-api.us-east-1.amazonaws.com/test
+    description: Test server
+  - url: https://xxxxxxxxx.execute-api.us-east-1.amazonaws.com/prod
+    description: Production server
+
+paths:
+  /users:
+    post:
+      summary: Create a new user
+      description: Registers a new user for a specific tenant.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - tenantId
+                - username
+                - email
+                - password
+              properties:
+                tenantId:
+                  type: string
+                  description: Unique identifier for the tenant.
+                username:
+                  type: string
+                  description: Unique username for the tenant.
+                email:
+                  type: string
+                  format: email
+                  description: User's email address.
+                password:
+                  type: string
+                  format: password
+                  description: User's password (min 8 characters).
+      responses:
+        '200':
+          description: User created successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  userId:
+                    type: string
+                    description: The unique ID of the created user.
+                  message:
+                    type: string
+        '400':
+          description: Bad request (e.g., validation error, user already exists).
+        '500':
+          description: Internal server error.
+
+  /users/login:
+    post:
+      summary: User login
+      description: Authenticates a user and returns an access token.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - tenantId
+                - username
+                - password
+              properties:
+                tenantId:
+                  type: string
+                username:
+                  type: string
+                password:
+                  type: string
+      responses:
+        '200':
+          description: Login successful.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                    description: JWT access token.
+        '401':
+          description: Unauthorized (invalid credentials).
+        '400':
+          description: Bad request.
+
+  /users/validate:
+    get:
+      summary: Validate access token
+      description: Validates a provided JWT token and returns user details if valid.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Token is valid.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  userId:
+                    type: string
+                  tenantId:
+                    type: string
+                  roles:
+                    type: array
+                    items:
+                      type: string
+                  message:
+                    type: string
+        '401':
+          description: Unauthorized (invalid or expired token).
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

@@ -1,0 +1,79 @@
+service: user-api-service
+
+provider:
+  name: aws
+  runtime: python3.9
+  region: us-east-1 
+  stage: ${opt:stage, 'dev'}
+  environment:
+    USERS_TABLE_NAME: ${self:custom.usersTableName}
+    JWT_SECRET_KEY: ${env:JWT_SECRET_KEY}
+  iam:
+    role:
+      statements:
+        - Effect: "Allow"
+          Action:
+            - "dynamodb:PutItem"
+            - "dynamodb:GetItem"
+            - "dynamodb:UpdateItem"
+            - "dynamodb:Query"
+          Resource:
+            - "arn:aws:dynamodb:${self:provider.region}:*:table/${self:custom.usersTableName}"
+            - "arn:aws:dynamodb:${self:provider.region}:*:table/${self:custom.usersTableName}/index/UsernameIndex"
+
+custom:
+  usersTableName: users-table-${self:provider.stage}
+
+functions:
+  createUser:
+    handler: src/handlers/create_user.handler
+    events:
+      - http:
+          path: /users
+          method: post
+          cors: true
+
+  loginUser:
+    handler: src/handlers/login_user.handler
+    events:
+      - http:
+          path: /users/login
+          method: post
+          cors: true
+
+  validateToken:
+    handler: src/handlers/validate_token.handler
+    events:
+      - http:
+          path: /users/validate
+          method: get
+          cors: true
+
+resources:
+  Resources:
+    UsersTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:custom.usersTableName}
+        AttributeDefinitions:
+          - AttributeName: tenantId
+            AttributeType: S
+          - AttributeName: userId
+            AttributeType: S
+          - AttributeName: username
+            AttributeType: S
+        KeySchema:
+          - AttributeName: tenantId
+            KeyType: HASH
+          - AttributeName: userId
+            KeyType: RANGE
+        BillingMode: PAY_PER_REQUEST
+        GlobalSecondaryIndexes:
+          - IndexName: UsernameIndex
+            KeySchema:
+              - AttributeName: tenantId
+                KeyType: HASH
+              - AttributeName: username
+                KeyType: RANGE
+            Projection:
+              ProjectionType: ALL
