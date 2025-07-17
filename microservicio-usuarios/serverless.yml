@@ -1,25 +1,17 @@
+org: zergixz2310
 service: user-api-service
 
 provider:
   name: aws
   runtime: python3.9
+  timeout: 30
   region: us-east-1 
   stage: ${opt:stage, 'dev'}
   environment:
     USERS_TABLE_NAME: ${self:custom.usersTableName}
     JWT_SECRET_KEY: ${env:JWT_SECRET_KEY}
   iam:
-    role:
-      statements:
-        - Effect: "Allow"
-          Action:
-            - "dynamodb:PutItem"
-            - "dynamodb:GetItem"
-            - "dynamodb:UpdateItem"
-            - "dynamodb:Query"
-          Resource:
-            - "arn:aws:dynamodb:${self:provider.region}:*:table/${self:custom.usersTableName}"
-            - "arn:aws:dynamodb:${self:provider.region}:*:table/${self:custom.usersTableName}/index/UsernameIndex"
+    role: arn:aws:iam::425104813278:role/LabRole
 
 custom:
   usersTableName: users-table-${self:provider.stage}
