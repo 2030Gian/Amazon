@@ -10,9 +10,17 @@ provider:
   environment:
     USERS_TABLE_NAME: ${self:custom.usersTableName}
     JWT_SECRET_KEY: ${env:JWT_SECRET_KEY}
-  iam:
-    role: arn:aws:iam::425104813278:role/LabRole
-
+  iamRoleStatements:
+      - Effect: "Allow"
+        Action:
+          - "dynamodb:PutItem"
+          - "dynamodb:GetItem"
+          - "dynamodb:Query"
+          - "dynamodb:UpdateItem"
+        Resource:
+          - "arn:aws:dynamodb:${self:provider.region}:*:table/${self:custom.usersTableName}"
+          - "arn:aws:dynamodb:${self:provider.region}:*:table/${self:custom.usersTableName}/index/UsernameIndex"
+          - "arn:aws:dynamodb:${self:provider.region}:*:table/${self:custom.usersTableName}/index/EmailIndex"
 custom:
   usersTableName: users-table-${self:provider.stage}
 
